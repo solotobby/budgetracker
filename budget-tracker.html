@@ -837,6 +837,9 @@ body {
       <i class="bi bi-hdd"></i> Local Storage
     </div>
   </div>
+  <button class="dropdown-item" id="openCurrencySettingsBtn">
+    <i class="bi bi-currency-exchange"></i> Currency Settings
+  </button>
   <button class="dropdown-item" id="openCloudSettingsBtn">
     <i class="bi bi-cloud-arrow-up"></i> Cloud Sync Settings
   </button>
@@ -893,11 +896,18 @@ body {
   <div class="section">
     <div class="section-title"><i class="bi bi-plus-circle"></i> Add Expense</div>
     <div class="add-form">
-      <div class="form-row">
+      <div class="form-row" style="grid-template-columns: 1.4fr 1fr 0.8fr;">
         <div class="select-wrap">
           <select class="form-select" id="catSelect" aria-label="Category"></select>
         </div>
-        <input type="number" class="form-input" id="amountInput" placeholder="Amount (£)" min="0" step="0.01">
+        <input type="number" class="form-input" id="amountInput" placeholder="Amount" min="0" step="0.01">
+        <!-- Stage 1: Currency selector (GBP / NGN) -->
+        <div class="select-wrap">
+          <select class="form-select" id="currencySelect" aria-label="Currency">
+            <option value="GBP">£ GBP</option>
+            <option value="NGN">₦ NGN</option>
+          </select>
+        </div>
       </div>
       <input type="text" class="form-input" id="descInput" placeholder="e.g. Rent, Tesco, Netflix…" maxlength="60">
       <button class="add-btn" id="addBtn">
@@ -1057,6 +1067,35 @@ body {
 </div>
 
 
+
+<!-- Stage 1: Currency Settings Modal -->
+<div class="modal-overlay" id="currencyModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Currency Settings</div>
+      <button class="modal-close" id="closeCurrencyModalBtn" aria-label="Close">&times;</button>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;">
+      Set your exchange rate and choose how totals are displayed. All data stays on your device.
+    </p>
+    <div class="input-group">
+      <label class="input-label">GBP to NGN rate</label>
+      <div class="input-wrapper">
+        <input type="number" id="rateInput" min="1" step="1" placeholder="e.g. 2150">
+      </div>
+      <div style="font-size:.75rem;color:var(--light);margin-top:4px;">1 GBP = ? NGN</div>
+    </div>
+    <div class="input-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="convertToggle" style="width:18px;height:18px;accent-color:var(--primary);">
+      <label for="convertToggle" style="font-size:.9rem;font-weight:600;cursor:pointer;">Convert all totals to GBP</label>
+    </div>
+    <button class="modal-btn" id="saveCurrencySettingsBtn">
+      <i class="bi bi-check-lg"></i> Save Settings
+    </button>
+    <div class="auth-alert" id="currencyAlert"></div>
+  </div>
+</div>
+
 <!-- ── JAVASCRIPT LOGIC ── -->
 <script>
 /* ── CONSTANTS & CATEGORIES ── */
@@ -1073,7 +1112,52 @@ const CATS = [
   { id:'other',        label:'Other',         color:'#4a3800', bg:'#fef9c3' },
 ];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const fmt = n => '£' + (parseFloat(n)||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+/* ── STAGE 1: MULTI-CURRENCY FOUNDATION (Oct 2026) ──
+   Expenses can be in GBP or NGN.
+   User-controlled exchange rate stored locally.
+   Optional conversion of summary totals to GBP.
+   Income remains in GBP for this stage.
+*/
+const CURRENCIES = {
+  GBP: { symbol: '£', name: 'British Pound' },
+  NGN: { symbol: '₦', name: 'Nigerian Naira' }
+};
+const DEFAULT_CURRENCY = 'GBP';
+
+function getRates() {
+  try {
+    return JSON.parse(localStorage.getItem('budget_rates') || '{"GBP_NGN":2150}');
+  } catch (e) {
+    return { GBP_NGN: 2150 };
+  }
+}
+
+function setRate(pair, rate) {
+  const rates = getRates();
+  rates[pair] = Number(rate) || rates[pair] || 2150;
+  localStorage.setItem('budget_rates', JSON.stringify(rates));
+}
+
+function fmt(amount, currency = DEFAULT_CURRENCY) {
+  const c = CURRENCIES[currency] || CURRENCIES.GBP;
+  const n = parseFloat(amount) || 0;
+  return c.symbol + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function toBase(amount, currency) {
+  if (!currency || currency === DEFAULT_CURRENCY) return Number(amount) || 0;
+  const rates = getRates();
+  if (currency === 'NGN') {
+    const rate = rates.GBP_NGN || 2150;
+    return (Number(amount) || 0) / rate;
+  }
+  return Number(amount) || 0;
+}
+
+function isConversionOn() {
+  return localStorage.getItem('budget_convert') === '1';
+}
+
 
 /* Populate category select */
 const catSel = document.getElementById('catSelect');
@@ -1340,9 +1424,15 @@ function render() {
   }
 
   // Totals & Progress
-  const totalExp  = expenses.reduce((s,e) => s + e.amount, 0);
-  const totalDone = done.reduce((s,e) => s + e.amount, 0);
-  const totalPend = pending.reduce((s,e) => s + e.amount, 0);
+  // Stage 1: support mixed currencies and optional conversion to GBP
+  const convert = isConversionOn();
+  const sumInBase = (list) => list.reduce((s, e) => {
+    const raw = Number(e.amount) || 0;
+    return s + (convert ? toBase(raw, e.currency) : raw);
+  }, 0);
+  const totalExp  = sumInBase(expenses);
+  const totalDone = sumInBase(done);
+  const totalPend = sumInBase(pending);
   const balance   = income - totalExp;
   const pct       = income > 0 ? Math.min(100, Math.round(totalExp / income * 100)) : 0;
 
@@ -1381,7 +1471,7 @@ function buildExpItem(exp) {
     </div>
     <span class="cat-badge" style="background:${c.bg};color:${c.color}">${c.label}</span>
     <span class="exp-desc" title="${escapeHtml(exp.description)}">${escapeHtml(exp.description)}</span>
-    <span class="exp-amount">${fmt(exp.amount)}</span>
+    <span class="exp-amount">${fmt(exp.amount, exp.currency || 'GBP')}</span>
     <button class="del-btn" data-del="${exp.id}" aria-label="Delete"><i class="bi bi-trash3"></i></button>`;
   return div;
 }
@@ -1426,6 +1516,7 @@ document.getElementById('addBtn').onclick = () => {
     category: cat,
     description: desc,
     amount,
+    currency: (document.getElementById('currencySelect') || {}).value || 'GBP', // Stage 1
     done: false
   });
 
@@ -1658,6 +1749,34 @@ document.getElementById('clearCloudConfigBtn').onclick = () => {
   location.reload();
 };
 
+
+/* ── STAGE 1: CURRENCY SETTINGS ── */
+document.getElementById('openCurrencySettingsBtn').onclick = () => {
+  userDropdown.classList.remove('show');
+  const rates = getRates();
+  document.getElementById('rateInput').value = rates.GBP_NGN || 2150;
+  document.getElementById('convertToggle').checked = isConversionOn();
+  openModal('currencyModal');
+};
+document.getElementById('closeCurrencyModalBtn').onclick = () => closeModal('currencyModal');
+
+document.getElementById('saveCurrencySettingsBtn').onclick = () => {
+  const rate = parseFloat(document.getElementById('rateInput').value);
+  const convert = document.getElementById('convertToggle').checked;
+  const alertEl = document.getElementById('currencyAlert');
+  if (!rate || rate <= 0) {
+    showAlert(alertEl, 'Please enter a valid exchange rate.', 'error');
+    return;
+  }
+  setRate('GBP_NGN', rate);
+  localStorage.setItem('budget_convert', convert ? '1' : '0');
+  showAlert(alertEl, 'Currency settings saved.', 'success');
+  setTimeout(() => {
+    closeModal('currencyModal');
+    render();
+  }, 600);
+};
+
 /* ── PWA INSTALL PROMPT & SERVICE WORKER ── */
 let deferredPrompt;
 const pwaBanner = document.getElementById('pwaBanner');
@@ -1701,3 +1820,4 @@ load();
 </script>
 </body>
 </html>
+

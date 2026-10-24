@@ -9,6 +9,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **👨‍👩‍👧 Friends & Family Support**: Anyone can create their own private account on the same link. Each account's budgets and expenses are isolated and private.
 - **☁️ Cloud Sync (Firebase)**: Sync across phone, tablet, and computer in real-time.
 - **⚡ Dual Engine**: Works immediately in offline/local mode, and seamlessly upgrades to Firebase Cloud Sync when you paste your free Firebase config.
+- **💱 Multi-currency (GBP + NGN)**: Track expenses in British Pounds or Nigerian Naira. Set your own exchange rate and optionally convert monthly totals to GBP. Fully offline.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -74,3 +75,14 @@ To sync your data across devices and let friends and family access their account
 ### Option B: Vercel (100% Free, 1 click)
 1. Run `npx vercel` in this folder, or import your GitHub repository into [Vercel](https://vercel.com).
 2. It gives you a fast global URL with automatic HTTPS.
+
+---
+
+## Development Notes
+
+### Stage 1 – Multi-currency foundation (October 2026)
+- Added optional `currency` field to expenses (`GBP` or `NGN`).
+- User-controlled GBP ↔ NGN exchange rate stored in localStorage.
+- Toggle to convert summary totals to GBP (income remains in GBP).
+- New Currency Settings modal accessible from the user menu.
+- All changes are fully offline and backward-compatible with existing data.
