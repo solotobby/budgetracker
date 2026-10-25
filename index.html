@@ -973,6 +973,31 @@ body {
     </div>
   </div>
 
+  <!-- Stage 3: Loans -->
+  <div class="section" id="loansSection">
+    <div class="section-title"><i class="bi bi-bank"></i> Loans</div>
+    <div id="loansList"></div>
+    <div class="add-form" style="margin-top:12px;">
+      <div class="form-row" style="grid-template-columns: 1.5fr 1fr 0.8fr;">
+        <input type="text" class="form-input" id="loanNameInput" placeholder="Loan name" maxlength="40">
+        <input type="number" class="form-input" id="loanPaymentInput" placeholder="Monthly payment" min="0" step="0.01">
+        <div class="select-wrap">
+          <select class="form-select" id="loanCurrencySelect" aria-label="Currency">
+            <option value="GBP">£ GBP</option>
+            <option value="NGN">₦ NGN</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <input type="number" class="form-input" id="loanRemainingInput" placeholder="Remaining balance" min="0" step="0.01">
+        <input type="number" class="form-input" id="loanMonthsInput" placeholder="Months left" min="1" step="1">
+      </div>
+      <button class="add-btn" id="addLoanBtn">
+        <i class="bi bi-plus-lg"></i> Add Loan
+      </button>
+    </div>
+  </div>
+
 </div><!-- /wrap -->
 
 
@@ -1323,6 +1348,46 @@ function onUserSignedIn() {
 }
 
 
+
+/* ── STAGE 3: BASIC LOANS (Oct 2026) ──
+   Simple loans with a monthly payment that appears as a recurring expense.
+   Marking the payment paid reduces the remaining balance.
+   Fully local and compatible with Stage 1 currency + Stage 2 recurring.
+*/
+function getLoansKey() {
+  const uid = currentUser ? currentUser.uid : 'guest';
+  return `budget_loans:${uid}`;
+}
+
+function loadLoans() {
+  try {
+    return JSON.parse(localStorage.getItem(getLoansKey()) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveLoans(loans) {
+  localStorage.setItem(getLoansKey(), JSON.stringify(loans));
+}
+
+function renderLoans() {
+  const list = document.getElementById('loansList');
+  if (!list) return;
+  const loans = loadLoans();
+  list.innerHTML = loans.length
+    ? loans.map(l => `
+        <div class="exp-item" style="padding:8px 0;">
+          <span class="exp-desc">${escapeHtml(l.name)}</span>
+          <span class="exp-amount">${fmt(l.monthlyPayment, l.currency)} / mo</span>
+          <span style="font-size:.8rem;color:var(--muted);margin-left:8px;">
+            ${fmt(l.remainingBalance, l.currency)} left · ${l.monthsLeft || 0} mo
+          </span>
+        </div>
+      `).join('')
+    : '<div class="empty-msg" style="padding:8px 0;">No loans yet</div>';
+}
+
 /* ── STAGE 2: RECURRING EXPENSES (Oct 2026) ──
    Monthly recurring items are auto-created when a new month is loaded
    if they don't already exist for that month.
@@ -1507,6 +1572,9 @@ function render() {
   balCard.className = 'balance-card' + (income > 0 ? (balance >= 0 ? ' positive' : ' negative') : '');
   balVal.className  = 'balance-val'  + (income > 0 ? (balance >= 0 ? ' positive' : ' negative') : '');
 
+  // Stage 3: render loans
+  renderLoans();
+
   // Progress Bar
   const pw = document.getElementById('progWrap');
   if (income > 0 && expenses.length) {
@@ -1603,6 +1671,16 @@ document.getElementById('expenseList').addEventListener('change', e => {
     const exp = expenses.find(x => x.id === e.target.dataset.id);
     if (exp) {
       exp.done = e.target.checked;
+      // Stage 3: reduce loan remaining balance when payment is marked paid
+      if (exp.isLoanPayment && exp.done) {
+        const loans = loadLoans();
+        const loan = loans.find(l => l.recurringId === exp.recurringId);
+        if (loan) {
+          loan.remainingBalance = Math.max(0, (loan.remainingBalance || 0) - exp.amount);
+          if (loan.monthsLeft > 0) loan.monthsLeft -= 1;
+          saveLoans(loans);
+        }
+      }
       save(); render();
     }
   }
@@ -1820,6 +1898,52 @@ document.getElementById('clearCloudConfigBtn').onclick = () => {
 };
 
 
+
+/* ── STAGE 3: ADD LOAN ── */
+document.getElementById('addLoanBtn').onclick = () => {
+  const name = document.getElementById('loanNameInput').value.trim();
+  const payment = parseFloat(document.getElementById('loanPaymentInput').value) || 0;
+  const remaining = parseFloat(document.getElementById('loanRemainingInput').value) || 0;
+  const monthsLeft = parseInt(document.getElementById('loanMonthsInput').value) || 0;
+  const currency = document.getElementById('loanCurrencySelect').value || 'GBP';
+
+  if (!name || payment <= 0 || monthsLeft <= 0) return;
+
+  const loans = loadLoans();
+  const recurringId = 'loan-' + name.toLowerCase().replace(/\s+/g, '-') + '-' + currency;
+
+  loans.push({
+    id: Date.now().toString(),
+    name,
+    monthlyPayment: payment,
+    currency,
+    remainingBalance: remaining,
+    monthsLeft: monthsLeft,          // Stage 3: contractual term remaining
+    recurringId
+  });
+  saveLoans(loans);
+
+  // Create the recurring expense so Stage 2 picks it up
+  expenses.push({
+    id: Date.now().toString() + Math.random().toString(36).substring(2,5),
+    category: 'other',
+    description: name + ' payment',
+    amount: payment,
+    currency,
+    done: false,
+    recurring: true,
+    recurringId,
+    isLoanPayment: true
+  });
+
+  document.getElementById('loanNameInput').value = '';
+  document.getElementById('loanPaymentInput').value = '';
+  document.getElementById('loanRemainingInput').value = '';
+  document.getElementById('loanMonthsInput').value = '';
+  save();
+  render();
+};
+
 /* ── STAGE 1: CURRENCY SETTINGS ── */
 document.getElementById('openCurrencySettingsBtn').onclick = () => {
   userDropdown.classList.remove('show');
@@ -1890,5 +2014,6 @@ load();
 </script>
 </body>
 </html>
+
 
 
