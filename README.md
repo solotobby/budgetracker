@@ -10,6 +10,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **☁️ Cloud Sync (Firebase)**: Sync across phone, tablet, and computer in real-time.
 - **⚡ Dual Engine**: Works immediately in offline/local mode, and seamlessly upgrades to Firebase Cloud Sync when you paste your free Firebase config.
 - **💱 Multi-currency (GBP + NGN)**: Track expenses in British Pounds or Nigerian Naira. Set your own exchange rate and optionally convert monthly totals to GBP. Fully offline.
+- **🔁 Recurring expenses**: Mark items to repeat every month. They appear automatically in new months (works with multi-currency).
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -86,3 +87,10 @@ To sync your data across devices and let friends and family access their account
 - Toggle to convert summary totals to GBP (income remains in GBP).
 - New Currency Settings modal accessible from the user menu.
 - All changes are fully offline and backward-compatible with existing data.
+
+### Stage 2 – Recurring expenses (October 2026)
+- Added “Repeat every month” option when creating an expense.
+- Recurring items are automatically generated when a new month is loaded (using a stable recurringId to avoid duplicates).
+- Small repeat icon shown next to recurring expenses in the list.
+- Fully compatible with Stage 1 multi-currency.
+- All data remains local.

@@ -910,6 +910,11 @@ body {
         </div>
       </div>
       <input type="text" class="form-input" id="descInput" placeholder="e.g. Rent, Tesco, Netflix…" maxlength="60">
+      <!-- Stage 2: Recurring monthly toggle -->
+      <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;margin:2px 0 4px;">
+        <input type="checkbox" id="recurringCheck" style="width:16px;height:16px;accent-color:var(--primary);">
+        Repeat every month
+      </label>
       <button class="add-btn" id="addBtn">
         <i class="bi bi-plus-lg"></i> Add Expense
       </button>
@@ -1317,6 +1322,55 @@ function onUserSignedIn() {
   load();
 }
 
+
+/* ── STAGE 2: RECURRING EXPENSES (Oct 2026) ──
+   Monthly recurring items are auto-created when a new month is loaded
+   if they don't already exist for that month.
+   Uses a stable recurringId so the same subscription isn't duplicated.
+*/
+function generateRecurringForMonth(mKey) {
+  // Collect all unique recurring templates from any stored month
+  const templates = new Map();
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith('budget:')) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      (data.expenses || []).forEach(exp => {
+        if (exp.recurring && exp.recurringId && !templates.has(exp.recurringId)) {
+          templates.set(exp.recurringId, {
+            description: exp.description,
+            amount: exp.amount,
+            currency: exp.currency || 'GBP',
+            category: exp.category,
+            recurringId: exp.recurringId
+          });
+        }
+      });
+    } catch (e) {}
+  }
+
+  // Add any missing ones to the current month
+  let added = false;
+  templates.forEach(tpl => {
+    const exists = expenses.some(e => e.recurringId === tpl.recurringId);
+    if (!exists) {
+      expenses.push({
+        id: Date.now().toString() + Math.random().toString(36).substring(2,5),
+        category: tpl.category,
+        description: tpl.description,
+        amount: tpl.amount,
+        currency: tpl.currency,
+        done: false,
+        recurring: true,
+        recurringId: tpl.recurringId
+      });
+      added = true;
+    }
+  });
+  return added;
+}
+
 /* ── STORAGE: LOAD & SAVE ── */
 async function load() {
   income = 0; expenses = []; incomeSet = false;
@@ -1341,6 +1395,11 @@ async function load() {
     // Local Multi-User Storage Mode
     loadFromLocal(mKey);
   }
+
+  // Stage 2: auto-generate recurring expenses for this month
+  const added = generateRecurringForMonth(mKey);
+  if (added) save(); // persist the newly generated items
+
   render();
 }
 
@@ -1470,7 +1529,10 @@ function buildExpItem(exp) {
       <input type="checkbox" class="exp-check" ${exp.done ? 'checked' : ''} data-id="${exp.id}" aria-label="Mark as paid">
     </div>
     <span class="cat-badge" style="background:${c.bg};color:${c.color}">${c.label}</span>
-    <span class="exp-desc" title="${escapeHtml(exp.description)}">${escapeHtml(exp.description)}</span>
+    <span class="exp-desc" title="${escapeHtml(exp.description)}">
+      ${escapeHtml(exp.description)}
+      ${exp.recurring ? '<i class="bi bi-arrow-repeat" style="font-size:.7rem;margin-left:4px;color:var(--primary);opacity:.7" title="Recurring monthly"></i>' : ''}
+    </span>
     <span class="exp-amount">${fmt(exp.amount, exp.currency || 'GBP')}</span>
     <button class="del-btn" data-del="${exp.id}" aria-label="Delete"><i class="bi bi-trash3"></i></button>`;
   return div;
@@ -1511,14 +1573,22 @@ document.getElementById('addBtn').onclick = () => {
   const cat = catSel.value;
   if (!desc || amount <= 0) return;
 
+  const isRecurring = document.getElementById('recurringCheck')?.checked || false;
+  const recurringId = isRecurring ? (desc.toLowerCase().replace(/\s+/g, '-') + '-' + (document.getElementById('currencySelect')?.value || 'GBP')) : null;
+
   expenses.push({
     id: Date.now().toString() + Math.random().toString(36).substring(2,5),
     category: cat,
     description: desc,
     amount,
     currency: (document.getElementById('currencySelect') || {}).value || 'GBP', // Stage 1
-    done: false
+    done: false,
+    recurring: isRecurring,           // Stage 2
+    recurringId: recurringId          // Stage 2: shared id to avoid duplicates
   });
+
+  // Reset recurring checkbox after add
+  if (document.getElementById('recurringCheck')) document.getElementById('recurringCheck').checked = false;
 
   document.getElementById('descInput').value = '';
   document.getElementById('amountInput').value = '';
@@ -1820,4 +1890,5 @@ load();
 </script>
 </body>
 </html>
+
 
