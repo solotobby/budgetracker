@@ -992,6 +992,17 @@ body {
         <input type="number" class="form-input" id="loanRemainingInput" placeholder="Remaining balance" min="0" step="0.01">
         <input type="number" class="form-input" id="loanMonthsInput" placeholder="Months left" min="1" step="1">
       </div>
+      <!-- Stage 4: Loan type + optional balloon -->
+      <div class="form-row">
+        <div class="select-wrap">
+          <select class="form-select" id="loanTypeSelect" aria-label="Loan type">
+            <option value="personal">Personal Loan</option>
+            <option value="pcp">PCP (Car)</option>
+            <option value="lease">Lease</option>
+          </select>
+        </div>
+        <input type="number" class="form-input" id="loanBalloonInput" placeholder="Balloon amount (optional)" min="0" step="0.01">
+      </div>
       <button class="add-btn" id="addLoanBtn">
         <i class="bi bi-plus-lg"></i> Add Loan
       </button>
@@ -1371,18 +1382,41 @@ function saveLoans(loans) {
   localStorage.setItem(getLoansKey(), JSON.stringify(loans));
 }
 
+
+/* ── STAGE 4: PCP / BALLOON (Oct 2026) ──
+   Loans can be Personal, PCP or Lease.
+   PCP/Lease can have a balloon amount and a simple savings pot toward it.
+*/
+function addToBalloon(loanId) {
+  const amount = parseFloat(prompt('Amount to add to balloon pot:')) || 0;
+  if (amount <= 0) return;
+  const loans = loadLoans();
+  const loan = loans.find(l => l.id === loanId);
+  if (loan) {
+    loan.balloonSaved = (loan.balloonSaved || 0) + amount;
+    saveLoans(loans);
+    render();
+  }
+}
+
 function renderLoans() {
   const list = document.getElementById('loansList');
   if (!list) return;
   const loans = loadLoans();
   list.innerHTML = loans.length
     ? loans.map(l => `
-        <div class="exp-item" style="padding:8px 0;">
-          <span class="exp-desc">${escapeHtml(l.name)}</span>
+        <div class="exp-item" style="padding:8px 0;flex-wrap:wrap;">
+          <span class="exp-desc">${escapeHtml(l.name)} <span style="font-size:.7rem;color:var(--primary);">${(l.type||'personal').toUpperCase()}</span></span>
           <span class="exp-amount">${fmt(l.monthlyPayment, l.currency)} / mo</span>
           <span style="font-size:.8rem;color:var(--muted);margin-left:8px;">
             ${fmt(l.remainingBalance, l.currency)} left · ${l.monthsLeft || 0} mo
           </span>
+          ${(l.type === 'pcp' || l.type === 'lease') && l.balloonAmount > 0 ? `
+            <div style="width:100%;font-size:.75rem;color:var(--muted);margin-top:4px;">
+              Balloon pot: ${fmt(l.balloonSaved || 0, l.currency)} / ${fmt(l.balloonAmount, l.currency)}
+              <button onclick="addToBalloon('${l.id}')" style="margin-left:8px;font-size:.7rem;padding:2px 8px;border-radius:12px;border:1px solid var(--primary);background:var(--primary-l);color:var(--primary);cursor:pointer;">+ Add</button>
+            </div>
+          ` : ''}
         </div>
       `).join('')
     : '<div class="empty-msg" style="padding:8px 0;">No loans yet</div>';
@@ -1906,6 +1940,8 @@ document.getElementById('addLoanBtn').onclick = () => {
   const remaining = parseFloat(document.getElementById('loanRemainingInput').value) || 0;
   const monthsLeft = parseInt(document.getElementById('loanMonthsInput').value) || 0;
   const currency = document.getElementById('loanCurrencySelect').value || 'GBP';
+  const type = document.getElementById('loanTypeSelect').value || 'personal';
+  const balloon = parseFloat(document.getElementById('loanBalloonInput').value) || 0;
 
   if (!name || payment <= 0 || monthsLeft <= 0) return;
 
@@ -1919,6 +1955,9 @@ document.getElementById('addLoanBtn').onclick = () => {
     currency,
     remainingBalance: remaining,
     monthsLeft: monthsLeft,          // Stage 3: contractual term remaining
+    type: type,                      // Stage 4
+    balloonAmount: balloon,          // Stage 4
+    balloonSaved: 0,                 // Stage 4
     recurringId
   });
   saveLoans(loans);
@@ -1940,6 +1979,7 @@ document.getElementById('addLoanBtn').onclick = () => {
   document.getElementById('loanPaymentInput').value = '';
   document.getElementById('loanRemainingInput').value = '';
   document.getElementById('loanMonthsInput').value = '';
+  document.getElementById('loanBalloonInput').value = '';
   save();
   render();
 };
@@ -2014,6 +2054,7 @@ load();
 </script>
 </body>
 </html>
+
 
 
 

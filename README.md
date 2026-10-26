@@ -12,6 +12,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **💱 Multi-currency (GBP + NGN)**: Track expenses in British Pounds or Nigerian Naira. Set your own exchange rate and optionally convert monthly totals to GBP. Fully offline.
 - **🔁 Recurring expenses**: Mark items to repeat every month. They appear automatically in new months (works with multi-currency).
 - **🏦 Basic loans**: Add a loan with a monthly payment. The payment appears automatically each month and reduces the remaining balance when marked paid.
+- **🚗 PCP / Balloon**: Loans can be Personal, PCP or Lease. Track a balloon payment and an optional savings pot toward it.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -101,3 +102,10 @@ To sync your data across devices and let friends and family access their account
 - Loan payment is created as a recurring expense (Stage 2).
 - Marking the payment as paid reduces the remaining balance.
 - Fully local and compatible with multi-currency.
+
+### Stage 4 – PCP / Balloon + Savings Pot (October 2026)
+- Loans now have a type (Personal, PCP, Lease).
+- PCP and Lease loans can include a balloon amount.
+- Simple balloon savings pot with an “Add” action.
+- Progress shown on the loan card.
+- Fully local and compatible with previous stages.
