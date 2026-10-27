@@ -1036,6 +1036,12 @@ body {
     <div id="debtOverviewContent"></div>
   </div>
 
+  <!-- Stage 7: Suggestions -->
+  <div class="section" id="suggestionsSection">
+    <div class="section-title"><i class="bi bi-lightbulb"></i> Suggestions</div>
+    <div id="suggestionsContent"></div>
+  </div>
+
 </div><!-- /wrap -->
 
 
@@ -1412,6 +1418,64 @@ function saveLoans(loans) {
 
 
 
+
+/* ── STAGE 7: SUGGESTIONS (Oct 2026) ──
+   Simple local rules that surface helpful tips.
+   No external services — runs only on data already stored.
+*/
+function renderSuggestions() {
+  const el = document.getElementById('suggestionsContent');
+  if (!el) return;
+
+  const loans = loadLoans();
+  const od = loadOverdraft();
+  const tips = [];
+
+  // Balloon pot under-funded
+  loans.forEach(l => {
+    if (l.balloonAmount && l.monthsLeft > 0) {
+      const saved = l.balloonSaved || 0;
+      const neededPerMonth = (l.balloonAmount - saved) / l.monthsLeft;
+      if (saved < l.balloonAmount * 0.4 && l.monthsLeft <= 18) {
+        tips.push({
+          title: 'Balloon pot needs attention',
+          text: `${l.name}: consider saving about ${fmt(neededPerMonth, l.currency)} per month toward the balloon.`
+        });
+      }
+    }
+  });
+
+  // High overdraft usage
+  if (od && od.limit > 0 && (od.used / od.limit) >= 0.65) {
+    tips.push({
+      title: 'Overdraft usage is high',
+      text: `You’ve used ${Math.round(od.used / od.limit * 100)}% of your overdraft limit. Reducing usage can help avoid fees.`
+    });
+  }
+
+  // Mixed-currency recurring subscriptions
+  const subs = expenses.filter(e => e.category === 'subscriptions' && e.recurring);
+  const currencies = [...new Set(subs.map(s => s.currency || 'GBP'))];
+  if (currencies.length > 1) {
+    tips.push({
+      title: 'Subscriptions in multiple currencies',
+      text: 'You have recurring subscriptions in more than one currency. Check if both are still needed.'
+    });
+  }
+
+  if (!tips.length) {
+    el.innerHTML = '<div class="empty-msg" style="padding:8px 0;">No suggestions right now — looking good.</div>';
+    return;
+  }
+
+  el.innerHTML = tips.map(t => `
+    <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px;">${escapeHtml(t.title)}</div>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.4;">${escapeHtml(t.text)}</div>
+    </div>
+  `).join('');
+}
+
 /* ── STAGE 6: DEBT OVERVIEW (Oct 2026) ──
    Single view of all loans + overdraft.
    Reads existing data only — no new storage.
@@ -1735,6 +1799,8 @@ function render() {
   renderOverdraft();
   // Stage 6: debt overview
   renderDebtOverview();
+  // Stage 7: suggestions
+  renderSuggestions();
 
   // Progress Bar
   const pw = document.getElementById('progWrap');
@@ -2201,6 +2267,7 @@ load();
 </script>
 </body>
 </html>
+
 
 
 
