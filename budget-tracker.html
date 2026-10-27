@@ -1030,6 +1030,12 @@ body {
     </div>
   </div>
 
+  <!-- Stage 6: Debt Overview -->
+  <div class="section" id="debtOverviewSection">
+    <div class="section-title"><i class="bi bi-pie-chart"></i> Debt Overview</div>
+    <div id="debtOverviewContent"></div>
+  </div>
+
 </div><!-- /wrap -->
 
 
@@ -1405,6 +1411,63 @@ function saveLoans(loans) {
 
 
 
+
+/* ── STAGE 6: DEBT OVERVIEW (Oct 2026) ──
+   Single view of all loans + overdraft.
+   Reads existing data only — no new storage.
+*/
+function renderDebtOverview() {
+  const el = document.getElementById('debtOverviewContent');
+  if (!el) return;
+
+  const loans = loadLoans();
+  const od = loadOverdraft();
+
+  let monthlyTotal = 0;
+  let remainingTotal = 0;
+  let content = '';
+
+  if (loans.length) {
+    content += '<div style="margin-bottom:10px;"><strong style="font-size:.85rem;">Loans</strong></div>';
+    loans.forEach(l => {
+      monthlyTotal += Number(l.monthlyPayment) || 0;
+      remainingTotal += Number(l.remainingBalance) || 0;
+      content += `
+        <div class="exp-item" style="padding:6px 0;flex-wrap:wrap;">
+          <span class="exp-desc">${escapeHtml(l.name)} <span style="font-size:.7rem;color:var(--primary);">${(l.type||'').toUpperCase()}</span></span>
+          <span class="exp-amount">${fmt(l.monthlyPayment, l.currency)}/mo</span>
+          <span style="font-size:.75rem;color:var(--muted);width:100%;">
+            ${fmt(l.remainingBalance, l.currency)} left · ${l.monthsLeft||0} mo
+            ${l.balloonAmount ? ` · Balloon ${fmt(l.balloonSaved||0, l.currency)}/${fmt(l.balloonAmount, l.currency)}` : ''}
+          </span>
+        </div>`;
+    });
+  }
+
+  if (od) {
+    remainingTotal += Number(od.used) || 0;
+    content += `
+      <div style="margin:12px 0 6px;"><strong style="font-size:.85rem;">Overdraft</strong></div>
+      <div style="font-size:.85rem;">
+        Used ${fmt(od.used, od.currency)} of ${fmt(od.limit, od.currency)}
+        <span style="color:var(--muted);"> · ${fmt(Math.max(0, od.limit - od.used), od.currency)} available</span>
+      </div>`;
+  }
+
+  if (loans.length || od) {
+    content = `
+      <div style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:12px;font-size:.85rem;">
+        <div>Monthly debt payments: <strong>${fmt(monthlyTotal)}</strong></div>
+        <div>Total remaining debt: <strong>${fmt(remainingTotal)}</strong></div>
+      </div>
+    ` + content;
+  } else {
+    content = '<div class="empty-msg" style="padding:8px 0;">No debt tracked yet</div>';
+  }
+
+  el.innerHTML = content;
+}
+
 /* ── STAGE 5: OVERDRAFT (Oct 2026) ──
    Simple overdraft facility: limit, amount used, currency.
    Fully local.
@@ -1670,6 +1733,8 @@ function render() {
   renderLoans();
   // Stage 5: render overdraft
   renderOverdraft();
+  // Stage 6: debt overview
+  renderDebtOverview();
 
   // Progress Bar
   const pw = document.getElementById('progWrap');
@@ -2136,6 +2201,7 @@ load();
 </script>
 </body>
 </html>
+
 
 
 

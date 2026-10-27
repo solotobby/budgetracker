@@ -14,6 +14,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **🏦 Basic loans**: Add a loan with a monthly payment. The payment appears automatically each month and reduces the remaining balance when marked paid.
 - **🚗 PCP / Balloon**: Loans can be Personal, PCP or Lease. Track a balloon payment and an optional savings pot toward it.
 - **💳 Overdraft**: Track an overdraft limit and amount used. Shows available balance.
+- **📋 Debt Overview**: One place to see all loans and overdraft together, with monthly and remaining totals.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -114,4 +115,10 @@ To sync your data across devices and let friends and family access their account
 ### Stage 5 – Overdraft (October 2026)
 - Added simple overdraft tracker (limit, amount used, currency).
 - Displayed in its own section below Loans.
+- Fully local and compatible with previous stages.
+
+### Stage 6 – Debt Overview (October 2026)
+- Added a Debt Overview section that combines loans and overdraft.
+- Shows monthly debt payments and total remaining debt.
+- Reads existing data only — no new storage.
 - Fully local and compatible with previous stages.
