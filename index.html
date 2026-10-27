@@ -1009,6 +1009,27 @@ body {
     </div>
   </div>
 
+  <!-- Stage 5: Overdraft -->
+  <div class="section" id="overdraftSection">
+    <div class="section-title"><i class="bi bi-wallet"></i> Overdraft</div>
+    <div id="overdraftDisplay"></div>
+    <div class="add-form" style="margin-top:10px;">
+      <div class="form-row" style="grid-template-columns: 1fr 1fr 0.8fr;">
+        <input type="number" class="form-input" id="odLimitInput" placeholder="Limit" min="0" step="0.01">
+        <input type="number" class="form-input" id="odUsedInput" placeholder="Amount used" min="0" step="0.01">
+        <div class="select-wrap">
+          <select class="form-select" id="odCurrencySelect" aria-label="Currency">
+            <option value="GBP">£ GBP</option>
+            <option value="NGN">₦ NGN</option>
+          </select>
+        </div>
+      </div>
+      <button class="add-btn" id="saveOverdraftBtn" style="background:#6b7280;">
+        <i class="bi bi-check-lg"></i> Save Overdraft
+      </button>
+    </div>
+  </div>
+
 </div><!-- /wrap -->
 
 
@@ -1383,6 +1404,45 @@ function saveLoans(loans) {
 }
 
 
+
+/* ── STAGE 5: OVERDRAFT (Oct 2026) ──
+   Simple overdraft facility: limit, amount used, currency.
+   Fully local.
+*/
+function getOverdraftKey() {
+  const uid = currentUser ? currentUser.uid : 'guest';
+  return `budget_overdraft:${uid}`;
+}
+
+function loadOverdraft() {
+  try {
+    return JSON.parse(localStorage.getItem(getOverdraftKey()) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function saveOverdraft(od) {
+  localStorage.setItem(getOverdraftKey(), JSON.stringify(od));
+}
+
+function renderOverdraft() {
+  const el = document.getElementById('overdraftDisplay');
+  if (!el) return;
+  const od = loadOverdraft();
+  if (!od) {
+    el.innerHTML = '<div class="empty-msg" style="padding:6px 0;">No overdraft set</div>';
+    return;
+  }
+  const available = Math.max(0, od.limit - od.used);
+  el.innerHTML = `
+    <div style="font-size:.9rem;">
+      Used ${fmt(od.used, od.currency)} of ${fmt(od.limit, od.currency)}
+      <span style="color:var(--muted);font-size:.8rem;"> · ${fmt(available, od.currency)} available</span>
+    </div>
+  `;
+}
+
 /* ── STAGE 4: PCP / BALLOON (Oct 2026) ──
    Loans can be Personal, PCP or Lease.
    PCP/Lease can have a balloon amount and a simple savings pot toward it.
@@ -1608,6 +1668,8 @@ function render() {
 
   // Stage 3: render loans
   renderLoans();
+  // Stage 5: render overdraft
+  renderOverdraft();
 
   // Progress Bar
   const pw = document.getElementById('progWrap');
@@ -1933,6 +1995,26 @@ document.getElementById('clearCloudConfigBtn').onclick = () => {
 
 
 
+
+/* ── STAGE 5: SAVE OVERDRAFT ── */
+document.getElementById('saveOverdraftBtn').onclick = () => {
+  const limit = parseFloat(document.getElementById('odLimitInput').value) || 0;
+  const used = parseFloat(document.getElementById('odUsedInput').value) || 0;
+  const currency = document.getElementById('odCurrencySelect').value || 'GBP';
+
+  if (limit <= 0) return;
+
+  saveOverdraft({
+    limit,
+    used: Math.min(used, limit),
+    currency
+  });
+
+  document.getElementById('odLimitInput').value = '';
+  document.getElementById('odUsedInput').value = '';
+  render();
+};
+
 /* ── STAGE 3: ADD LOAN ── */
 document.getElementById('addLoanBtn').onclick = () => {
   const name = document.getElementById('loanNameInput').value.trim();
@@ -2054,6 +2136,7 @@ load();
 </script>
 </body>
 </html>
+
 
 
 

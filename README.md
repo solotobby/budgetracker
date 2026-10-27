@@ -13,6 +13,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **🔁 Recurring expenses**: Mark items to repeat every month. They appear automatically in new months (works with multi-currency).
 - **🏦 Basic loans**: Add a loan with a monthly payment. The payment appears automatically each month and reduces the remaining balance when marked paid.
 - **🚗 PCP / Balloon**: Loans can be Personal, PCP or Lease. Track a balloon payment and an optional savings pot toward it.
+- **💳 Overdraft**: Track an overdraft limit and amount used. Shows available balance.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -108,4 +109,9 @@ To sync your data across devices and let friends and family access their account
 - PCP and Lease loans can include a balloon amount.
 - Simple balloon savings pot with an “Add” action.
 - Progress shown on the loan card.
+- Fully local and compatible with previous stages.
+
+### Stage 5 – Overdraft (October 2026)
+- Added simple overdraft tracker (limit, amount used, currency).
+- Displayed in its own section below Loans.
 - Fully local and compatible with previous stages.
