@@ -17,6 +17,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **📋 Debt Overview**: One place to see all loans and overdraft together, with monthly and remaining totals.
 - **💡 Suggestions**: Simple local tips based on your loans, overdraft, and subscriptions.
 - **📅 History**: View previous months with income, total expenses and remaining balance.
+- **📈 Amortization & Charts**: Loans can show interest/principal split. History includes simple spending bars.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -135,4 +136,11 @@ To sync your data across devices and let friends and family access their account
 - Added a History section showing previous months.
 - Displays income, total expenses and remaining balance for each past month.
 - Reads existing per-month localStorage data only.
+- Fully local and compatible with previous stages.
+
+### Stage 9 – Amortization + Light Charts (October 2026)
+- Loans can include an optional interest rate.
+- Monthly payment is split into interest and principal.
+- Remaining balance reduces by principal only.
+- History section now shows simple relative spending bars.
 - Fully local and compatible with previous stages.
