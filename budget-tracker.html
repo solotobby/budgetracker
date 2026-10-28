@@ -1042,6 +1042,12 @@ body {
     <div id="suggestionsContent"></div>
   </div>
 
+  <!-- Stage 8: History -->
+  <div class="section" id="historySection">
+    <div class="section-title"><i class="bi bi-clock-history"></i> History</div>
+    <div id="historyContent"></div>
+  </div>
+
 </div><!-- /wrap -->
 
 
@@ -1418,6 +1424,64 @@ function saveLoans(loans) {
 
 
 
+
+
+/* ── STAGE 8: MULTI-MONTH HISTORY (Oct 2026) ──
+   Shows previous months’ income, expenses and remaining balance.
+   Reads existing per-month localStorage data only.
+*/
+function renderHistory() {
+  const el = document.getElementById('historyContent');
+  if (!el) return;
+
+  const months = [];
+  const uid = currentUser ? currentUser.uid : 'guest';
+  const prefix = `budget:${uid}:`;
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith(prefix)) continue;
+    const mKey = key.slice(prefix.length);
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      const totalExp = (data.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const remaining = (Number(data.income) || 0) - totalExp;
+      months.push({
+        key: mKey,
+        label: formatMonthLabel(mKey),
+        income: Number(data.income) || 0,
+        expenses: totalExp,
+        remaining
+      });
+    } catch (e) {}
+  }
+
+  months.sort((a, b) => b.key.localeCompare(a.key));
+  const past = months.filter(m => m.key !== currentMonthKey()).slice(0, 6);
+
+  if (!past.length) {
+    el.innerHTML = '<div class="empty-msg" style="padding:8px 0;">No previous months yet</div>';
+    return;
+  }
+
+  el.innerHTML = past.map(m => `
+    <div class="exp-item" style="padding:8px 0;flex-wrap:wrap;">
+      <span class="exp-desc" style="font-weight:600;">${m.label}</span>
+      <span style="font-size:.8rem;color:var(--muted);width:100%;">
+        Income ${fmt(m.income)} · Spent ${fmt(m.expenses)} · Left ${fmt(m.remaining)}
+      </span>
+    </div>
+  `).join('');
+}
+
+function formatMonthLabel(mKey) {
+  const parts = mKey.split('-');
+  if (parts.length < 2) return mKey;
+  const y = parts[0];
+  const m = parseInt(parts[1], 10);
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${names[m-1] || m} ${y}`;
+}
 
 /* ── STAGE 7: SUGGESTIONS (Oct 2026) ──
    Simple local rules that surface helpful tips.
@@ -1801,6 +1865,8 @@ function render() {
   renderDebtOverview();
   // Stage 7: suggestions
   renderSuggestions();
+  // Stage 8: history
+  renderHistory();
 
   // Progress Bar
   const pw = document.getElementById('progWrap');
@@ -2267,6 +2333,7 @@ load();
 </script>
 </body>
 </html>
+
 
 
 

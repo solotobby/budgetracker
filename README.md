@@ -16,6 +16,7 @@ A fast, mobile-first, installable Progressive Web App (PWA) for personal and fam
 - **💳 Overdraft**: Track an overdraft limit and amount used. Shows available balance.
 - **📋 Debt Overview**: One place to see all loans and overdraft together, with monthly and remaining totals.
 - **💡 Suggestions**: Simple local tips based on your loans, overdraft, and subscriptions.
+- **📅 History**: View previous months with income, total expenses and remaining balance.
 - **📊 Comprehensive Financial Tools**:
   - Monthly navigation (January – December).
   - Monthly income setup & editing.
@@ -128,4 +129,10 @@ To sync your data across devices and let friends and family access their account
 - Added a Suggestions section with simple local rules.
 - Tips for balloon pot funding, high overdraft usage, and mixed-currency subscriptions.
 - Runs entirely on data already stored — no external services.
+- Fully local and compatible with previous stages.
+
+### Stage 8 – Multi-month History (October 2026)
+- Added a History section showing previous months.
+- Displays income, total expenses and remaining balance for each past month.
+- Reads existing per-month localStorage data only.
 - Fully local and compatible with previous stages.
