@@ -635,6 +635,55 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
 
+/* ── MAIN NAVIGATION TABS ── */
+.app-tabs {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+  margin-bottom: 16px;
+  gap: 6px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.app-tabs::-webkit-scrollbar { display: none; }
+.app-tab-btn {
+  flex: 1;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: .85rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: all .18s ease;
+}
+.app-tab-btn:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+.app-tab-btn.active {
+  background: var(--primary-l);
+  color: var(--primary);
+  border-color: rgba(91,94,244,.2);
+}
+.app-tab-pane {
+  display: block;
+}
+.app-tab-pane.tab-hidden {
+  display: none !important;
+}
+
 /* Modal Form Controls */
 .input-group {
   margin-bottom: 14px;
@@ -855,199 +904,232 @@ body {
 <!-- Main App Wrap -->
 <div class="wrap">
 
-  <!-- Month Navigation -->
-  <div class="month-nav">
-    <button class="nav-btn" id="prevBtn" aria-label="Previous month">
-      <i class="bi bi-chevron-left"></i>
+  <!-- Main Navigation Tabs -->
+  <div class="app-tabs" role="tablist">
+    <button class="app-tab-btn active" id="tabBtnBudget" role="tab" aria-selected="true" onclick="switchMainTab('budget')">
+      <i class="bi bi-wallet2"></i> Budget
     </button>
-    <span class="month-label" id="monthLabel"></span>
-    <button class="nav-btn" id="nextBtn" aria-label="Next month">
-      <i class="bi bi-chevron-right"></i>
+    <button class="app-tab-btn" id="tabBtnLoans" role="tab" aria-selected="false" onclick="switchMainTab('loans')">
+      <i class="bi bi-bank"></i> Loans
+    </button>
+    <button class="app-tab-btn" id="tabBtnOverdraft" role="tab" aria-selected="false" onclick="switchMainTab('overdraft')">
+      <i class="bi bi-credit-card-2-front"></i> Overdraft
+    </button>
+    <button class="app-tab-btn" id="tabBtnDebt" role="tab" aria-selected="false" onclick="switchMainTab('debt')">
+      <i class="bi bi-pie-chart"></i> Debt Overview
     </button>
   </div>
 
-  <!-- Income Section -->
-  <div class="section">
-    <div class="section-title">
-      <i class="bi bi-cash-stack"></i> Monthly Income
-    </div>
+  <!-- ── TAB PANE: BUDGET ── -->
+  <div id="paneBudget" class="app-tab-pane">
 
-    <!-- Edit Mode -->
-    <div class="income-edit" id="incomeEditMode">
-      <input type="number" id="incomeInput" placeholder="e.g. 3500.00" min="0" step="0.01">
-      <button class="set-btn" id="setIncomeBtn">
-        <i class="bi bi-check-lg"></i> Set
+    <!-- Month Navigation -->
+    <div class="month-nav">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous month">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="nav-btn" id="nextBtn" aria-label="Next month">
+        <i class="bi bi-chevron-right"></i>
       </button>
     </div>
 
-    <!-- Display Mode -->
-    <div class="income-display-row" id="incomeDisplayMode" style="display:none">
-      <div>
-        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--light);margin-bottom:4px">This month</div>
-        <span class="income-display" id="incomeDisplay">£0.00</span>
+    <!-- Income Section -->
+    <div class="section">
+      <div class="section-title">
+        <i class="bi bi-cash-stack"></i> Monthly Income
       </div>
-      <button class="edit-link" id="editIncomeBtn">
-        <i class="bi bi-pencil" style="font-size:.75rem"></i> Edit
-      </button>
-    </div>
-  </div>
 
-  <!-- Add Expense Section -->
-  <div class="section">
-    <div class="section-title"><i class="bi bi-plus-circle"></i> Add Expense</div>
-    <div class="add-form">
-      <div class="form-row" style="grid-template-columns: 1.4fr 1fr 0.8fr;">
-        <div class="select-wrap">
-          <select class="form-select" id="catSelect" aria-label="Category"></select>
+      <!-- Edit Mode -->
+      <div class="income-edit" id="incomeEditMode">
+        <input type="number" id="incomeInput" placeholder="e.g. 3500.00" min="0" step="0.01">
+        <button class="set-btn" id="setIncomeBtn">
+          <i class="bi bi-check-lg"></i> Set
+        </button>
+      </div>
+
+      <!-- Display Mode -->
+      <div class="income-display-row" id="incomeDisplayMode" style="display:none">
+        <div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--light);margin-bottom:4px">This month</div>
+          <span class="income-display" id="incomeDisplay">£0.00</span>
         </div>
-        <input type="number" class="form-input" id="amountInput" placeholder="Amount" min="0" step="0.01">
-        <!-- Stage 1: Currency selector (GBP / NGN) -->
-        <div class="select-wrap">
-          <select class="form-select" id="currencySelect" aria-label="Currency">
-            <option value="GBP">£ GBP</option>
-            <option value="NGN">₦ NGN</option>
-          </select>
+        <button class="edit-link" id="editIncomeBtn">
+          <i class="bi bi-pencil" style="font-size:.75rem"></i> Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Expense Section -->
+    <div class="section">
+      <div class="section-title"><i class="bi bi-plus-circle"></i> Add Expense</div>
+      <div class="add-form">
+        <div class="form-row" style="grid-template-columns: 1.4fr 1fr 0.8fr;">
+          <div class="select-wrap">
+            <select class="form-select" id="catSelect" aria-label="Category"></select>
+          </div>
+          <input type="number" class="form-input" id="amountInput" placeholder="Amount" min="0" step="0.01">
+          <!-- Stage 1: Currency selector (GBP / NGN) -->
+          <div class="select-wrap">
+            <select class="form-select" id="currencySelect" aria-label="Currency">
+              <option value="GBP">£ GBP</option>
+              <option value="NGN">₦ NGN</option>
+            </select>
+          </div>
         </div>
+        <input type="text" class="form-input" id="descInput" placeholder="e.g. Rent, Tesco, Netflix…" maxlength="60">
+        <!-- Stage 2: Recurring monthly toggle -->
+        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;margin:2px 0 4px;">
+          <input type="checkbox" id="recurringCheck" style="width:16px;height:16px;accent-color:var(--primary);">
+          Repeat every month
+        </label>
+        <button class="add-btn" id="addBtn">
+          <i class="bi bi-plus-lg"></i> Add Expense
+        </button>
       </div>
-      <input type="text" class="form-input" id="descInput" placeholder="e.g. Rent, Tesco, Netflix…" maxlength="60">
-      <!-- Stage 2: Recurring monthly toggle -->
-      <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;margin:2px 0 4px;">
-        <input type="checkbox" id="recurringCheck" style="width:16px;height:16px;accent-color:var(--primary);">
-        Repeat every month
-      </label>
-      <button class="add-btn" id="addBtn">
-        <i class="bi bi-plus-lg"></i> Add Expense
-      </button>
     </div>
-  </div>
 
-  <!-- Expense List Section -->
-  <div class="section">
-    <div class="exp-list-hdr">
-      <div class="section-title" style="margin-bottom:0">
-        <i class="bi bi-list-check"></i> Expenses
+    <!-- Expense List Section -->
+    <div class="section">
+      <div class="exp-list-hdr">
+        <div class="section-title" style="margin-bottom:0">
+          <i class="bi bi-list-check"></i> Expenses
+        </div>
+        <span class="exp-count-badge" id="expCount" style="display:none"></span>
       </div>
-      <span class="exp-count-badge" id="expCount" style="display:none"></span>
-    </div>
-    <div class="expense-list" id="expenseList"></div>
-    <div class="empty-msg" id="emptyMsg" style="display:none">
-      <i class="bi bi-receipt"></i>
-      No expenses yet — add one above
-    </div>
-    <div class="prog-wrap" id="progWrap" style="display:none">
-      <div class="prog-label">
-        <span>Budget used</span>
-        <span id="progPct"></span>
+      <div class="expense-list" id="expenseList"></div>
+      <div class="empty-msg" id="emptyMsg" style="display:none">
+        <i class="bi bi-receipt"></i>
+        No expenses yet — add one above
       </div>
-      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-wrap" id="progWrap" style="display:none">
+        <div class="prog-label">
+          <span>Budget used</span>
+          <span id="progPct"></span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Summary Section -->
-  <div class="section">
-    <div class="section-title"><i class="bi bi-bar-chart-fill"></i> Summary</div>
-    <div class="summary-grid">
-      <div class="metric">
-        <div class="metric-label"><i class="bi bi-cash"></i> Income</div>
-        <div class="metric-val income" id="sumIncome">£0.00</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label"><i class="bi bi-credit-card"></i> Total expenses</div>
-        <div class="metric-val" id="sumTotal">£0.00</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label"><i class="bi bi-check-circle-fill"></i> Paid</div>
-        <div class="metric-val paid" id="sumDone">£0.00</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label"><i class="bi bi-clock"></i> Still to pay</div>
-        <div class="metric-val pending" id="sumPending">£0.00</div>
-      </div>
-    </div>
-    <div class="balance-card" id="balanceCard">
-      <div>
-        <div class="bal-label">Remaining balance</div>
-        <div class="balance-val" id="balanceVal">£0.00</div>
-      </div>
-      <i class="bi bi-wallet2 bal-icon"></i>
-    </div>
-  </div>
-
-  <!-- Stage 3: Loans -->
-  <div class="section" id="loansSection">
-    <div class="section-title"><i class="bi bi-bank"></i> Loans</div>
-    <div id="loansList"></div>
-    <div class="add-form" style="margin-top:12px;">
-      <div class="form-row" style="grid-template-columns: 1.5fr 1fr 0.8fr;">
-        <input type="text" class="form-input" id="loanNameInput" placeholder="Loan name" maxlength="40">
-        <input type="number" class="form-input" id="loanPaymentInput" placeholder="Monthly payment" min="0" step="0.01">
-        <div class="select-wrap">
-          <select class="form-select" id="loanCurrencySelect" aria-label="Currency">
-            <option value="GBP">£ GBP</option>
-            <option value="NGN">₦ NGN</option>
-          </select>
+    <!-- Summary Section -->
+    <div class="section">
+      <div class="section-title"><i class="bi bi-bar-chart-fill"></i> Summary</div>
+      <div class="summary-grid">
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-cash"></i> Income</div>
+          <div class="metric-val income" id="sumIncome">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-credit-card"></i> Total expenses</div>
+          <div class="metric-val" id="sumTotal">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-check-circle-fill"></i> Paid</div>
+          <div class="metric-val paid" id="sumDone">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-clock"></i> Still to pay</div>
+          <div class="metric-val pending" id="sumPending">£0.00</div>
         </div>
       </div>
-      <div class="form-row">
-        <input type="number" class="form-input" id="loanRemainingInput" placeholder="Remaining balance" min="0" step="0.01">
-        <input type="number" class="form-input" id="loanMonthsInput" placeholder="Months left" min="1" step="1">
-      </div>
-      <input type="number" class="form-input" id="loanRateInput" placeholder="Interest rate % (optional)" min="0" step="0.01">
-      <!-- Stage 4: Loan type + optional balloon -->
-      <div class="form-row">
-        <div class="select-wrap">
-          <select class="form-select" id="loanTypeSelect" aria-label="Loan type">
-            <option value="personal">Personal Loan</option>
-            <option value="pcp">PCP (Car)</option>
-            <option value="lease">Lease</option>
-          </select>
+      <div class="balance-card" id="balanceCard">
+        <div>
+          <div class="bal-label">Remaining balance</div>
+          <div class="balance-val" id="balanceVal">£0.00</div>
         </div>
-        <input type="number" class="form-input" id="loanBalloonInput" placeholder="Balloon amount (optional)" min="0" step="0.01">
+        <i class="bi bi-wallet2 bal-icon"></i>
       </div>
-      <button class="add-btn" id="addLoanBtn">
-        <i class="bi bi-plus-lg"></i> Add Loan
-      </button>
     </div>
-  </div>
 
-  <!-- Stage 5: Overdraft -->
-  <div class="section" id="overdraftSection">
-    <div class="section-title"><i class="bi bi-wallet"></i> Overdraft</div>
-    <div id="overdraftDisplay"></div>
-    <div class="add-form" style="margin-top:10px;">
-      <div class="form-row" style="grid-template-columns: 1fr 1fr 0.8fr;">
-        <input type="number" class="form-input" id="odLimitInput" placeholder="Limit" min="0" step="0.01">
-        <input type="number" class="form-input" id="odUsedInput" placeholder="Amount used" min="0" step="0.01">
-        <div class="select-wrap">
-          <select class="form-select" id="odCurrencySelect" aria-label="Currency">
-            <option value="GBP">£ GBP</option>
-            <option value="NGN">₦ NGN</option>
-          </select>
+    <!-- Stage 7: Suggestions -->
+    <div class="section" id="suggestionsSection">
+      <div class="section-title"><i class="bi bi-lightbulb"></i> Suggestions</div>
+      <div id="suggestionsContent"></div>
+    </div>
+
+    <!-- Stage 8: History -->
+    <div class="section" id="historySection">
+      <div class="section-title"><i class="bi bi-clock-history"></i> History</div>
+      <div id="historyContent"></div>
+    </div>
+
+  </div><!-- /paneBudget -->
+
+
+  <!-- ── TAB PANE: LOANS ── -->
+  <div id="paneLoans" class="app-tab-pane tab-hidden">
+    <!-- Stage 3: Loans -->
+    <div class="section" id="loansSection">
+      <div class="section-title"><i class="bi bi-bank"></i> Manage Loans</div>
+      <div id="loansList"></div>
+      <div class="add-form" style="margin-top:12px;">
+        <div class="form-row" style="grid-template-columns: 1.5fr 1fr 0.8fr;">
+          <input type="text" class="form-input" id="loanNameInput" placeholder="Loan name" maxlength="40">
+          <input type="number" class="form-input" id="loanPaymentInput" placeholder="Monthly payment" min="0" step="0.01">
+          <div class="select-wrap">
+            <select class="form-select" id="loanCurrencySelect" aria-label="Currency">
+              <option value="GBP">£ GBP</option>
+              <option value="NGN">₦ NGN</option>
+            </select>
+          </div>
         </div>
+        <div class="form-row">
+          <input type="number" class="form-input" id="loanRemainingInput" placeholder="Remaining balance" min="0" step="0.01">
+          <input type="number" class="form-input" id="loanMonthsInput" placeholder="Months left" min="1" step="1">
+        </div>
+        <input type="number" class="form-input" id="loanRateInput" placeholder="Interest rate % (optional)" min="0" step="0.01">
+        <!-- Stage 4: Loan type + optional balloon -->
+        <div class="form-row">
+          <div class="select-wrap">
+            <select class="form-select" id="loanTypeSelect" aria-label="Loan type">
+              <option value="personal">Personal Loan</option>
+              <option value="pcp">PCP (Car)</option>
+              <option value="lease">Lease</option>
+            </select>
+          </div>
+          <input type="number" class="form-input" id="loanBalloonInput" placeholder="Balloon amount (optional)" min="0" step="0.01">
+        </div>
+        <button class="add-btn" id="addLoanBtn">
+          <i class="bi bi-plus-lg"></i> Add Loan
+        </button>
       </div>
-      <button class="add-btn" id="saveOverdraftBtn" style="background:#6b7280;">
-        <i class="bi bi-check-lg"></i> Save Overdraft
-      </button>
     </div>
-  </div>
+  </div><!-- /paneLoans -->
 
-  <!-- Stage 6: Debt Overview -->
-  <div class="section" id="debtOverviewSection">
-    <div class="section-title"><i class="bi bi-pie-chart"></i> Debt Overview</div>
-    <div id="debtOverviewContent"></div>
-  </div>
 
-  <!-- Stage 7: Suggestions -->
-  <div class="section" id="suggestionsSection">
-    <div class="section-title"><i class="bi bi-lightbulb"></i> Suggestions</div>
-    <div id="suggestionsContent"></div>
-  </div>
+  <!-- ── TAB PANE: OVERDRAFT ── -->
+  <div id="paneOverdraft" class="app-tab-pane tab-hidden">
+    <!-- Stage 5: Overdraft -->
+    <div class="section" id="overdraftSection">
+      <div class="section-title"><i class="bi bi-wallet"></i> Manage Overdraft</div>
+      <div id="overdraftDisplay"></div>
+      <div class="add-form" style="margin-top:10px;">
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 0.8fr;">
+          <input type="number" class="form-input" id="odLimitInput" placeholder="Limit" min="0" step="0.01">
+          <input type="number" class="form-input" id="odUsedInput" placeholder="Amount used" min="0" step="0.01">
+          <div class="select-wrap">
+            <select class="form-select" id="odCurrencySelect" aria-label="Currency">
+              <option value="GBP">£ GBP</option>
+              <option value="NGN">₦ NGN</option>
+            </select>
+          </div>
+        </div>
+        <button class="add-btn" id="saveOverdraftBtn" style="background:#6b7280;">
+          <i class="bi bi-check-lg"></i> Save Overdraft
+        </button>
+      </div>
+    </div>
+  </div><!-- /paneOverdraft -->
 
-  <!-- Stage 8: History -->
-  <div class="section" id="historySection">
-    <div class="section-title"><i class="bi bi-clock-history"></i> History</div>
-    <div id="historyContent"></div>
-  </div>
+
+  <!-- ── TAB PANE: DEBT OVERVIEW ── -->
+  <div id="paneDebt" class="app-tab-pane tab-hidden">
+    <!-- Stage 6: Debt Overview -->
+    <div class="section" id="debtOverviewSection">
+      <div class="section-title"><i class="bi bi-pie-chart"></i> Combined Debt Overview</div>
+      <div id="debtOverviewContent"></div>
+    </div>
+  </div><!-- /paneDebt -->
 
 </div><!-- /wrap -->
 
@@ -1288,6 +1370,37 @@ const ServerApi = {
     return await this.request('save_budget', 'POST', { month, data });
   }
 };
+
+/* ── MAIN TAB SWITCHING ── */
+function switchMainTab(tabName) {
+  const tabs = [
+    { name: 'budget', btn: 'tabBtnBudget', pane: 'paneBudget' },
+    { name: 'loans', btn: 'tabBtnLoans', pane: 'paneLoans' },
+    { name: 'overdraft', btn: 'tabBtnOverdraft', pane: 'paneOverdraft' },
+    { name: 'debt', btn: 'tabBtnDebt', pane: 'paneDebt' }
+  ];
+
+  tabs.forEach(t => {
+    const btn = document.getElementById(t.btn);
+    const pane = document.getElementById(t.pane);
+    if (!btn || !pane) return;
+
+    if (t.name === tabName) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      pane.classList.remove('tab-hidden');
+    } else {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+      pane.classList.add('tab-hidden');
+    }
+  });
+
+  // Re-render components for active tab if needed
+  if (tabName === 'loans') renderLoans();
+  if (tabName === 'overdraft') renderOverdraft();
+  if (tabName === 'debt') renderDebtOverview();
+}
 
 /* ── APP STATE ── */
 let now = new Date(), yr = now.getFullYear(), mo = now.getMonth();
