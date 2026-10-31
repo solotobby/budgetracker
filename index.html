@@ -934,6 +934,36 @@ body {
       </button>
     </div>
 
+    <!-- Summary Section (Moved directly under month/date) -->
+    <div class="section">
+      <div class="section-title"><i class="bi bi-bar-chart-fill"></i> Summary</div>
+      <div class="summary-grid">
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-cash"></i> Income</div>
+          <div class="metric-val income" id="sumIncome">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-credit-card"></i> Total expenses</div>
+          <div class="metric-val" id="sumTotal">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-check-circle-fill"></i> Paid</div>
+          <div class="metric-val paid" id="sumDone">£0.00</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label"><i class="bi bi-clock"></i> Still to pay</div>
+          <div class="metric-val pending" id="sumPending">£0.00</div>
+        </div>
+      </div>
+      <div class="balance-card" id="balanceCard">
+        <div>
+          <div class="bal-label">Remaining balance</div>
+          <div class="balance-val" id="balanceVal">£0.00</div>
+        </div>
+        <i class="bi bi-wallet2 bal-icon"></i>
+      </div>
+    </div>
+
     <!-- Income Section -->
     <div class="section">
       <div class="section-title">
@@ -1008,36 +1038,6 @@ body {
           <span id="progPct"></span>
         </div>
         <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-      </div>
-    </div>
-
-    <!-- Summary Section -->
-    <div class="section">
-      <div class="section-title"><i class="bi bi-bar-chart-fill"></i> Summary</div>
-      <div class="summary-grid">
-        <div class="metric">
-          <div class="metric-label"><i class="bi bi-cash"></i> Income</div>
-          <div class="metric-val income" id="sumIncome">£0.00</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label"><i class="bi bi-credit-card"></i> Total expenses</div>
-          <div class="metric-val" id="sumTotal">£0.00</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label"><i class="bi bi-check-circle-fill"></i> Paid</div>
-          <div class="metric-val paid" id="sumDone">£0.00</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label"><i class="bi bi-clock"></i> Still to pay</div>
-          <div class="metric-val pending" id="sumPending">£0.00</div>
-        </div>
-      </div>
-      <div class="balance-card" id="balanceCard">
-        <div>
-          <div class="bal-label">Remaining balance</div>
-          <div class="balance-val" id="balanceVal">£0.00</div>
-        </div>
-        <i class="bi bi-wallet2 bal-icon"></i>
       </div>
     </div>
 
