@@ -20,7 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<!-- Firebase SDKs (Compat version for smooth standalone CDN usage) -->
+<!-- Firebase SDKs (Optional fallback) -->
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
@@ -1248,10 +1248,51 @@ CATS.forEach(c => {
 });
 function catById(id){ return CATS.find(c => c.id === id) || CATS[CATS.length-1]; }
 
+/* ── SERVER API ENGINE (MySQL + Backend) ── */
+const ServerApi = {
+  token: localStorage.getItem('budget_auth_token') || '',
+  async request(action, method = 'GET', body = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.token) {
+      headers['Authorization'] = 'Bearer ' + this.token;
+    }
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`api.php?action=${action}`, opts);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Request failed');
+    }
+    return data;
+  },
+  async register(username, password) {
+    const res = await this.request('register', 'POST', { username, password });
+    if (res.user && res.user.token) {
+      this.token = res.user.token;
+      localStorage.setItem('budget_auth_token', this.token);
+    }
+    return res.user;
+  },
+  async login(username, password) {
+    const res = await this.request('login', 'POST', { username, password });
+    if (res.user && res.user.token) {
+      this.token = res.user.token;
+      localStorage.setItem('budget_auth_token', this.token);
+    }
+    return res.user;
+  },
+  async getBudget(month) {
+    return await this.request(`get_budget&month=${month}`, 'GET');
+  },
+  async saveBudget(month, data) {
+    return await this.request('save_budget', 'POST', { month, data });
+  }
+};
+
 /* ── APP STATE ── */
 let now = new Date(), yr = now.getFullYear(), mo = now.getMonth();
 let income = 0, expenses = [], incomeSet = false;
-let currentUser = null; // { uid, username, email }
+let currentUser = null; // { uid, username }
 let isCloudActive = false;
 let db = null;
 let auth = null;
@@ -1310,10 +1351,15 @@ const LocalAuth = {
   }
 };
 
-/* ── FIREBASE INITIALIZATION ── */
+/* ── INITIALIZATION ── */
 function initFirebase() {
+  // Check if saved user from Server DB
+  const savedUser = localStorage.getItem('budget_active_user');
+  if (savedUser) {
+    try { currentUser = JSON.parse(savedUser); } catch(e){}
+  }
+
   let config = window.FIREBASE_CONFIG;
-  // Check if saved in localStorage
   const savedCfg = localStorage.getItem('budget_firebase_config');
   if (savedCfg) {
     try { config = JSON.parse(savedCfg); } catch(e){}
@@ -1330,7 +1376,6 @@ function initFirebase() {
       document.getElementById('syncStatusBadge').innerHTML = '<i class="bi bi-cloud-check-fill" style="color:#10b981"></i> Cloud Synced';
       document.getElementById('syncStatusBadge').className = 'dropdown-badge online';
       
-      // Listen to Firebase Auth state
       auth.onAuthStateChanged(user => {
         if (user) {
           currentUser = {
@@ -1340,8 +1385,7 @@ function initFirebase() {
           };
           onUserSignedIn();
         } else {
-          // If logged out from Firebase, check if local user was active
-          const loc = localStorage.getItem('budget_active_local_user');
+          const loc = localStorage.getItem('budget_active_user');
           if (loc) {
             try { currentUser = JSON.parse(loc); } catch(e){ currentUser = null; }
           } else {
@@ -1357,15 +1401,10 @@ function initFirebase() {
     }
   }
 
-  // Fallback to Local Auth Engine
+  // Server DB Mode status
   isCloudActive = false;
-  document.getElementById('syncStatusBadge').innerHTML = '<i class="bi bi-hdd"></i> Local Storage';
-  document.getElementById('syncStatusBadge').className = 'dropdown-badge';
-  
-  const savedUser = localStorage.getItem('budget_active_local_user');
-  if (savedUser) {
-    try { currentUser = JSON.parse(savedUser); } catch(e){}
-  }
+  document.getElementById('syncStatusBadge').innerHTML = '<i class="bi bi-database-check" style="color:#10b981"></i> Server Database';
+  document.getElementById('syncStatusBadge').className = 'dropdown-badge online';
   updateUserUI();
   return false;
 }
@@ -1746,7 +1785,22 @@ async function load() {
   income = 0; expenses = []; incomeSet = false;
   const mKey = currentMonthKey();
 
-  if (isCloudActive && auth && auth.currentUser && db) {
+  if (currentUser && currentUser.token) {
+    // Server Database Mode
+    try {
+      const res = await ServerApi.getBudget(mKey);
+      if (res && res.data) {
+        income = res.data.income || 0;
+        expenses = res.data.expenses || [];
+        incomeSet = !!res.data.incomeSet;
+      } else {
+        loadFromLocal(mKey);
+      }
+    } catch(err) {
+      console.warn('Server DB load fallback to local:', err);
+      loadFromLocal(mKey);
+    }
+  } else if (isCloudActive && auth && auth.currentUser && db) {
     // Cloud Firestore Mode
     try {
       const docRef = db.collection('users').doc(auth.currentUser.uid).collection('budgets').doc(mKey);
@@ -1793,6 +1847,15 @@ async function save() {
   try {
     localStorage.setItem(userKey(mKey), JSON.stringify(data));
   } catch(e) {}
+
+  // Sync to Server Database if logged in
+  if (currentUser && currentUser.token) {
+    try {
+      await ServerApi.saveBudget(mKey, data);
+    } catch(err) {
+      console.error('Server DB save error:', err);
+    }
+  }
 
   // Sync to Cloud if active
   if (isCloudActive && auth && auth.currentUser && db) {
@@ -2117,16 +2180,30 @@ document.getElementById('authForm').onsubmit = async (e) => {
         currentUser = { uid: cred.user.uid, username: cred.user.displayName || ident, email };
       }
     } else {
-      // Local Auth Engine Flow
-      if (authMode === 'signup') {
-        const user = await LocalAuth.register(ident, pwd);
-        currentUser = user;
-        localStorage.setItem('budget_active_local_user', JSON.stringify(user));
-        showAlert(authAlert, 'Account created! Welcome, ' + user.username, 'success');
-      } else {
-        const user = await LocalAuth.login(ident, pwd);
-        currentUser = user;
-        localStorage.setItem('budget_active_local_user', JSON.stringify(user));
+      // Server DB Auth Flow (with automatic local fallback)
+      try {
+        if (authMode === 'signup') {
+          const user = await ServerApi.register(ident, pwd);
+          currentUser = user;
+          localStorage.setItem('budget_active_user', JSON.stringify(user));
+          showAlert(authAlert, 'Account created! Welcome, ' + user.username, 'success');
+        } else {
+          const user = await ServerApi.login(ident, pwd);
+          currentUser = user;
+          localStorage.setItem('budget_active_user', JSON.stringify(user));
+        }
+      } catch (apiErr) {
+        // Fallback to local engine if server API is unavailable
+        if (authMode === 'signup') {
+          const user = await LocalAuth.register(ident, pwd);
+          currentUser = user;
+          localStorage.setItem('budget_active_user', JSON.stringify(user));
+          showAlert(authAlert, 'Account created locally! Welcome, ' + user.username, 'success');
+        } else {
+          const user = await LocalAuth.login(ident, pwd);
+          currentUser = user;
+          localStorage.setItem('budget_active_user', JSON.stringify(user));
+        }
       }
     }
 
@@ -2153,7 +2230,8 @@ document.getElementById('signOutBtn').onclick = async () => {
   if (isCloudActive && auth) {
     await auth.signOut();
   }
-  localStorage.removeItem('budget_active_local_user');
+  localStorage.removeItem('budget_active_user');
+  localStorage.removeItem('budget_auth_token');
   currentUser = null;
   updateUserUI();
   load();
