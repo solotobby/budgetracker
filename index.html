@@ -58,7 +58,7 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  padding: 0 0 env(safe-area-inset-bottom, 60px);
+  padding: 0 0 calc(76px + env(safe-area-inset-bottom, 0px));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -635,53 +635,126 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
 
-/* ── MAIN NAVIGATION TABS ── */
-.app-tabs {
-  display: flex;
+/* ── BOTTOM NAVIGATION BAR ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px;
-  margin-bottom: 16px;
-  gap: 6px;
-  box-shadow: var(--shadow);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.app-tabs::-webkit-scrollbar { display: none; }
-.app-tab-btn {
-  flex: 1;
-  min-width: 90px;
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
+  justify-content: space-around;
+  z-index: 90;
+  box-shadow: 0 -2px 10px rgba(0,0,0,.05);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 14px;
-  font-size: .85rem;
-  font-weight: 700;
-  font-family: inherit;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+  gap: 3px;
+  height: 100%;
+  background: none;
+  border: none;
   color: var(--muted);
-  white-space: nowrap;
-  transition: all .18s ease;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s ease;
+  padding: 6px 0;
 }
-.app-tab-btn:hover {
+.bottom-nav-item i {
+  font-size: 1.25rem;
+  transition: transform .15s;
+}
+.bottom-nav-item span {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: -.1px;
+}
+.bottom-nav-item:hover {
   color: var(--text);
-  background: var(--bg);
 }
-.app-tab-btn.active {
-  background: var(--primary-l);
+.bottom-nav-item.active {
   color: var(--primary);
-  border-color: rgba(91,94,244,.2);
+}
+.bottom-nav-item.active i {
+  transform: translateY(-2px);
 }
 .app-tab-pane {
   display: block;
 }
 .app-tab-pane.tab-hidden {
   display: none !important;
+}
+
+/* Profile Section Styles */
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+.profile-header-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.profile-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #4338ca);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(91,94,244,.25);
+}
+.profile-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.profile-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: .9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all .15s;
+}
+.profile-action-btn:hover {
+  background: var(--primary-l);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.profile-action-btn.danger {
+  color: var(--expense);
+}
+.profile-action-btn.danger:hover {
+  background: var(--expense-l);
+  border-color: var(--expense);
 }
 
 /* Modal Form Controls */
@@ -904,23 +977,7 @@ body {
 <!-- Main App Wrap -->
 <div class="wrap">
 
-  <!-- Main Navigation Tabs -->
-  <div class="app-tabs" role="tablist">
-    <button class="app-tab-btn active" id="tabBtnBudget" role="tab" aria-selected="true" onclick="switchMainTab('budget')">
-      <i class="bi bi-wallet2"></i> Budget
-    </button>
-    <button class="app-tab-btn" id="tabBtnLoans" role="tab" aria-selected="false" onclick="switchMainTab('loans')">
-      <i class="bi bi-bank"></i> Loans
-    </button>
-    <button class="app-tab-btn" id="tabBtnOverdraft" role="tab" aria-selected="false" onclick="switchMainTab('overdraft')">
-      <i class="bi bi-credit-card-2-front"></i> Overdraft
-    </button>
-    <button class="app-tab-btn" id="tabBtnDebt" role="tab" aria-selected="false" onclick="switchMainTab('debt')">
-      <i class="bi bi-pie-chart"></i> Debt Overview
-    </button>
-  </div>
-
-  <!-- ── TAB PANE: BUDGET ── -->
+  <!-- ── TAB PANE: HOME (BUDGET) ── -->
   <div id="paneBudget" class="app-tab-pane">
 
     <!-- Month Navigation -->
@@ -1058,6 +1115,12 @@ body {
 
   <!-- ── TAB PANE: LOANS ── -->
   <div id="paneLoans" class="app-tab-pane tab-hidden">
+    <!-- Combined Debt Overview on Loans page -->
+    <div class="section" id="debtOverviewSection">
+      <div class="section-title"><i class="bi bi-pie-chart"></i> Combined Debt Overview</div>
+      <div id="debtOverviewContent"></div>
+    </div>
+
     <!-- Stage 3: Loans -->
     <div class="section" id="loansSection">
       <div class="section-title"><i class="bi bi-bank"></i> Manage Loans</div>
@@ -1122,16 +1185,68 @@ body {
   </div><!-- /paneOverdraft -->
 
 
-  <!-- ── TAB PANE: DEBT OVERVIEW ── -->
-  <div id="paneDebt" class="app-tab-pane tab-hidden">
-    <!-- Stage 6: Debt Overview -->
-    <div class="section" id="debtOverviewSection">
-      <div class="section-title"><i class="bi bi-pie-chart"></i> Combined Debt Overview</div>
-      <div id="debtOverviewContent"></div>
+  <!-- ── TAB PANE: PROFILE ── -->
+  <div id="paneProfile" class="app-tab-pane tab-hidden">
+    <div class="profile-card">
+      <div class="profile-header-box">
+        <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+        <div>
+          <div class="profile-name" id="profileDisplayName">User</div>
+          <div class="dropdown-badge" id="profileSyncBadge" style="margin-top:6px;">
+            <i class="bi bi-database-check"></i> Server Database
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--light);margin-bottom:12px;">
+        Settings & Tools
+      </div>
+
+      <button class="profile-action-btn" onclick="openModal('currencyModal')">
+        <span><i class="bi bi-currency-exchange" style="margin-right:10px;color:var(--primary);"></i>Currency Settings</span>
+        <i class="bi bi-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </button>
+
+      <button class="profile-action-btn" onclick="openModal('cloudModal')">
+        <span><i class="bi bi-cloud-arrow-up" style="margin-right:10px;color:#10b981;"></i>Cloud Sync (Firebase)</span>
+        <i class="bi bi-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </button>
+
+      <button class="profile-action-btn" id="profileExportBtn" onclick="document.getElementById('exportDataBtn').click()">
+        <span><i class="bi bi-download" style="margin-right:10px;color:#2563eb;"></i>Export Data Backup</span>
+        <i class="bi bi-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </button>
+
+      <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+
+      <button class="profile-action-btn" id="profileAuthActionBtn" onclick="handleProfileAuthClick()">
+        <span id="profileAuthActionText"><i class="bi bi-box-arrow-in-right" style="margin-right:10px;color:var(--primary);"></i>Sign In / Switch User</span>
+        <i class="bi bi-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </button>
     </div>
-  </div><!-- /paneDebt -->
+  </div><!-- /paneProfile -->
 
 </div><!-- /wrap -->
+
+<!-- ── BOTTOM NAVIGATION BAR ── -->
+<nav class="bottom-nav" aria-label="Bottom navigation">
+  <button class="bottom-nav-item active" id="navHomeBtn" onclick="switchMainTab('budget')">
+    <i class="bi bi-house-door-fill"></i>
+    <span>Home</span>
+  </button>
+  <button class="bottom-nav-item" id="navLoansBtn" onclick="switchMainTab('loans')">
+    <i class="bi bi-bank"></i>
+    <span>Loans</span>
+  </button>
+  <button class="bottom-nav-item" id="navOverdraftBtn" onclick="switchMainTab('overdraft')">
+    <i class="bi bi-credit-card-2-front"></i>
+    <span>Overdraft</span>
+  </button>
+  <button class="bottom-nav-item" id="navProfileBtn" onclick="switchMainTab('profile')">
+    <i class="bi bi-person-circle"></i>
+    <span>Profile</span>
+  </button>
+</nav>
 
 
 <!-- ── AUTH MODAL ── -->
@@ -1371,35 +1486,78 @@ const ServerApi = {
   }
 };
 
-/* ── MAIN TAB SWITCHING ── */
+/* ── MAIN BOTTOM NAVIGATION SWITCHING ── */
 function switchMainTab(tabName) {
   const tabs = [
-    { name: 'budget', btn: 'tabBtnBudget', pane: 'paneBudget' },
-    { name: 'loans', btn: 'tabBtnLoans', pane: 'paneLoans' },
-    { name: 'overdraft', btn: 'tabBtnOverdraft', pane: 'paneOverdraft' },
-    { name: 'debt', btn: 'tabBtnDebt', pane: 'paneDebt' }
+    { name: 'budget', nav: 'navHomeBtn', pane: 'paneBudget' },
+    { name: 'loans', nav: 'navLoansBtn', pane: 'paneLoans' },
+    { name: 'overdraft', nav: 'navOverdraftBtn', pane: 'paneOverdraft' },
+    { name: 'profile', nav: 'navProfileBtn', pane: 'paneProfile' }
   ];
 
   tabs.forEach(t => {
-    const btn = document.getElementById(t.btn);
+    const navBtn = document.getElementById(t.nav);
     const pane = document.getElementById(t.pane);
-    if (!btn || !pane) return;
+    if (!pane) return;
 
     if (t.name === tabName) {
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
+      if (navBtn) navBtn.classList.add('active');
       pane.classList.remove('tab-hidden');
     } else {
-      btn.classList.remove('active');
-      btn.setAttribute('aria-selected', 'false');
+      if (navBtn) navBtn.classList.remove('active');
       pane.classList.add('tab-hidden');
     }
   });
 
   // Re-render components for active tab if needed
-  if (tabName === 'loans') renderLoans();
+  if (tabName === 'loans') {
+    renderLoans();
+    renderDebtOverview();
+  }
   if (tabName === 'overdraft') renderOverdraft();
-  if (tabName === 'debt') renderDebtOverview();
+  if (tabName === 'profile') renderProfilePane();
+
+  // Scroll to top on navigation change
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderProfilePane() {
+  const avatar = document.getElementById('profileAvatarLarge');
+  const name = document.getElementById('profileDisplayName');
+  const badge = document.getElementById('profileSyncBadge');
+  const authBtnText = document.getElementById('profileAuthActionText');
+  const authBtn = document.getElementById('profileAuthActionBtn');
+
+  if (currentUser) {
+    const initial = (currentUser.username || 'U')[0].toUpperCase();
+    if (avatar) avatar.textContent = initial;
+    if (name) name.textContent = currentUser.username;
+    if (badge) {
+      badge.innerHTML = isCloudActive 
+        ? '<i class="bi bi-cloud-check-fill" style="color:#10b981;"></i> Cloud Synced' 
+        : '<i class="bi bi-database-check" style="color:#10b981;"></i> Server Database';
+      badge.className = 'dropdown-badge online';
+    }
+    if (authBtnText) authBtnText.innerHTML = '<i class="bi bi-box-arrow-right" style="margin-right:10px;color:var(--expense);"></i>Sign Out';
+    if (authBtn) authBtn.classList.add('danger');
+  } else {
+    if (avatar) avatar.textContent = 'G';
+    if (name) name.textContent = 'Guest User';
+    if (badge) {
+      badge.innerHTML = '<i class="bi bi-hdd"></i> Local Guest Mode';
+      badge.className = 'dropdown-badge';
+    }
+    if (authBtnText) authBtnText.innerHTML = '<i class="bi bi-box-arrow-in-right" style="margin-right:10px;color:var(--primary);"></i>Sign In / Create Account';
+    if (authBtn) authBtn.classList.remove('danger');
+  }
+}
+
+function handleProfileAuthClick() {
+  if (currentUser) {
+    document.getElementById('signOutBtn').click();
+  } else {
+    document.getElementById('loginPromptBtn').click();
+  }
 }
 
 /* ── APP STATE ── */
@@ -1548,6 +1706,7 @@ function onUserSignedIn() {
   updateUserUI();
   closeModal('authModal');
   load();
+  renderProfilePane();
 }
 
 
